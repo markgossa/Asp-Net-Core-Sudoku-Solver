@@ -54,3 +54,24 @@ body {
   height: 60px;
   line-height: 60px; /* Vertically center the text there */
 }
+
+.table-sudoku-grid {
+    height: 500px;
+    width: 500px;
+    align-content: center;
+    border: 1px solid black;
+    text-align: center;
+    vertical-align: central;
+    margin: auto;
+}
+
+.table-sudoku-grid-cell {
+    border: 1px solid black;
+    font-size: 20px;
+}
+
+.div-sudoku-grid {
+    margin: auto;
+    width: 75%;
+    text-align: center;
+}
