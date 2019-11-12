@@ -4,18 +4,29 @@
     ViewData["Title"] = "Home Page";
 }
 
-    <div class="div-sudoku-grid">
-        <h2 class="display-4">Solve my Sudoku puzzle!</h2>
-        <table class="table-sudoku-grid">
-            @for (int row = 1; row < 10; row++)
-            {
-                <tr>
-                @foreach (var cell in Model.Cells.Where(x => x.RowNumber.Equals(row)))
+    <form method="post" asp-action="SubmitSudokuPuzzle">
+        <div class="div-sudoku-grid">
+            <h2 class="display-4">Solve my Sudoku puzzle!</h2>
+            <table class="table-sudoku-grid">
+                @for (int row = 0; row < 9; row++)
                 {
-                    <td class="table-sudoku-grid-cell">@cell.Value</td>
-                }
+                    <tr>
+                        @for (int column = 0; column < 9; column++)
+                        {
+                            <td class="table-sudoku-grid-cell">
+                                <input type="text" class="input-sudoku-grid-cell" asp-for="Cells[row * 9 + column].Value" />
+                            </td>
+                        }
 
+                    </tr>
+                }
+                <tr>
+                    <td colspan="9">
+                            <input type="text" class="input-sudoku-grid-cell" asp-for="Cells[0].Value" />
+                    </td>
                 </tr>
-            }
-        </table>
-    </div>
+            </table>
+            <button>Solve!</button>
+
+        </div>
+    </form>

@@ -68,10 +68,29 @@ body {
 .table-sudoku-grid-cell {
     border: 1px solid black;
     font-size: 20px;
+    column-width: 10px;
+    align-content: center;
 }
 
 .div-sudoku-grid {
     margin: auto;
     width: 75%;
     text-align: center;
+}
+
+.textarea {
+    width: 10px;
+    /*height: 10em;*/
+}
+
+.table-sudoku-grid-cell td {
+    border: solid #3c6f91 1px;
+    white-space: nowrap;
+    width: 1px;
+}
+
+input[type=text] {
+    font: 18pt arial, tahoma, verdana sans-serif;
+    width: 100%;
+    align-items: center;
 }

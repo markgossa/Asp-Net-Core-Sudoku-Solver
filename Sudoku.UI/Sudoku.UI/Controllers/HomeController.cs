@@ -11,7 +11,7 @@ namespace Sudoku.UI.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ISudokoGrid _sudokuGrid;
+        private ISudokoGrid _sudokuGrid;
 
         public HomeController(ISudokoGrid sudokuGrid)
         {
@@ -26,6 +26,18 @@ namespace Sudoku.UI.Controllers
         public IActionResult About()
         {
             return View();
+        }
+
+        public IActionResult TestForm(List<SudokuCell> cells)
+        {
+            _sudokuGrid.Cells = cells;
+            return View("Index", _sudokuGrid);
+        }
+
+        public IActionResult SubmitSudokuPuzzle(List<SudokuCell> cells)
+        {
+            _sudokuGrid.Cells = cells;
+            return View("Index", _sudokuGrid);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
