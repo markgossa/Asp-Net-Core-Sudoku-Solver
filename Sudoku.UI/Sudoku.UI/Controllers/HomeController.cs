@@ -1,26 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Sudoku.UI.Models;
+using Sudoku.UI.Models.Sudoku;
 using Sudoku.UI.Services;
 
 namespace Sudoku.UI.Controllers
 {
     public class HomeController : Controller
     {
-        private ISudokoGrid _sudokuGrid;
+        private IGrid _grid;
 
-        public HomeController(ISudokoGrid sudokuGrid)
+        public HomeController(IGrid grid)
         {
-            _sudokuGrid = sudokuGrid;
+            _grid = grid;
         }
 
         public IActionResult Index()
         {
-            return View(_sudokuGrid);
+            return View(_grid);
         }
 
         public IActionResult About()
@@ -28,16 +26,10 @@ namespace Sudoku.UI.Controllers
             return View();
         }
 
-        public IActionResult TestForm(List<SudokuCell> cells)
+        public IActionResult SubmitSudokuPuzzle(List<Cell> cells)
         {
-            _sudokuGrid.Cells = cells;
-            return View("Index", _sudokuGrid);
-        }
-
-        public IActionResult SubmitSudokuPuzzle(List<SudokuCell> cells)
-        {
-            _sudokuGrid.Cells = cells;
-            return View("Index", _sudokuGrid);
+            _grid.Cells = cells;
+            return View("Index", _grid);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

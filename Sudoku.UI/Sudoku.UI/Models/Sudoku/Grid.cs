@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Sudoku.UI.Models
+namespace Sudoku.UI.Models.Sudoku
 {
-    public class SudokuGrid : ISudokoGrid
+    public class Grid : IGrid
     {
-        public List<SudokuCell> Cells { get; set; }
+        public List<Cell> Cells { get; set; }
 
-        public SudokuCell FindCell(int row, int column)
+        public Cell FindCell(int row, int column)
         {
             return Cells.FirstOrDefault(x => x.RowNumber.Equals(row) && x.ColumnNumber.Equals(column));
         }

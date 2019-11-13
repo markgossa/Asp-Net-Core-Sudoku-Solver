@@ -5,16 +5,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Sudoku.UI.Models
+namespace Sudoku.UI.Models.Sudoku
 {
-    public class SudokuGridBuilder : ISudokuGridBuilder
+    public class GridBuilder : IGridBuilder
     {
-        private readonly SudokuGrid _sudokoGrid;
+        private readonly Grid _sudokoGrid;
 
-        public SudokuGridBuilder()
+        public GridBuilder()
         {
-            _sudokoGrid = new SudokuGrid();
-            _sudokoGrid.Cells = new List<SudokuCell>();
+            _sudokoGrid = new Grid();
+            _sudokoGrid.Cells = new List<Cell>();
         }
 
         private void AddCells()
@@ -23,12 +23,12 @@ namespace Sudoku.UI.Models
             {
                 for (int row = 1; row < 10; row++)
                 {
-                    _sudokoGrid.Cells.Add(new SudokuCell() { ColumnNumber = column, RowNumber = row, Value = 0 });
+                    _sudokoGrid.Cells.Add(new Cell() { ColumnNumber = column, RowNumber = row, Value = 0 });
                 }
             }
         }
 
-        public SudokuGrid GetSudokuGrid()
+        public Grid GetSudokuGrid()
         {
             AddCells();
             return _sudokoGrid;

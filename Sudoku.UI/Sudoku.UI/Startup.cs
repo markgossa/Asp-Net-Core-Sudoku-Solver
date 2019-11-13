@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sudoku.UI.Models;
+using Sudoku.UI.Models.Sudoku;
 using Sudoku.UI.Services;
 
 namespace Sudoku.UI
@@ -33,9 +34,9 @@ namespace Sudoku.UI
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.AddScoped<ISudokuGridBuilder, SudokuGridBuilder>();
+            services.AddScoped<IGridBuilder, GridBuilder>();
 
-            services.AddScoped<ISudokoGrid>(sp => sp.GetService<ISudokuGridBuilder>().GetSudokuGrid());
+            services.AddScoped<IGrid>(sp => sp.GetService<IGridBuilder>().GetSudokuGrid());
             //services.AddScoped<ISudokoGrid, SudokuGrid>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
