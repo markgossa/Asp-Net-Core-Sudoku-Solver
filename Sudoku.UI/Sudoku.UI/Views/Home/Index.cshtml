@@ -14,17 +14,14 @@
                         @for (int column = 0; column < 9; column++)
                         {
                             <td class="table-sudoku-grid-cell">
+                                <input type="hidden" asp-for="Cells[row * 9 + column].RowNumber" value="@row" />
+                                <input type="hidden" asp-for="Cells[row * 9 + column].ColumnNumber" value="@column" />
                                 <input type="text" class="input-sudoku-grid-cell" asp-for="Cells[row * 9 + column].Value" />
                             </td>
                         }
 
                     </tr>
                 }
-                <tr>
-                    <td colspan="9">
-                            <input type="text" class="input-sudoku-grid-cell" asp-for="Cells[0].Value" />
-                    </td>
-                </tr>
             </table>
             <button>Solve!</button>
 

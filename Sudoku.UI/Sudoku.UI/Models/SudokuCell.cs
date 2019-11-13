@@ -10,6 +10,5 @@ namespace Sudoku.UI.Models
         public int Value { get; set; }
         public int RowNumber { get; set; }
         public int ColumnNumber { get; set; }
-        public int Id { get; set; }
     }
 }
