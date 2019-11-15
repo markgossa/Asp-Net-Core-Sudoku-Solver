@@ -23,7 +23,7 @@ namespace Sudoku.UI.Models.Sudoku
             {
                 for (int row = 1; row < 10; row++)
                 {
-                    _sudokoGrid.Cells.Add(new Cell() { ColumnNumber = column, RowNumber = row, Value = 0 });
+                    _sudokoGrid.Cells.Add(new Cell() { Column = column, Row = row, Value = 0 });
                 }
             }
         }

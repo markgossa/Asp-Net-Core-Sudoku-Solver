@@ -41,6 +41,9 @@ namespace Sudoku.UI.Controllers
             relatedCells.AddRange(_grid.Cells.Where(c => c.Row.Equals(cell.Row)
             || c.Column.Equals(cell.Column)));
             relatedCells.AddRange(GetBoxCells(GetCellBox(cell)));
+            relatedCells.Remove(cell);
+
+            return relatedCells;
         }
 
         private List<Cell> GetBoxCells(Box box)
@@ -55,17 +58,6 @@ namespace Sudoku.UI.Controllers
 
         private Box GetCellBox(Cell cell)
         {
-            //foreach (var box in _boxes)
-            //{
-            //    if (cell.Row >= box.StartRow &&
-            //        cell.Row <= box.EndRow &&
-            //        cell.Column >= box.StartColumn &&
-            //        cell.Column <= box.EndColumn)
-            //    {
-            //        return box;
-            //    }
-            //}
-
             return _grid.Boxes.FirstOrDefault(b =>
                 cell.Row >= b.StartRow &&
                 cell.Row <= b.EndRow &&
@@ -92,12 +84,6 @@ namespace Sudoku.UI.Controllers
             }
 
             return boxes;
-        }
-
-        private void GetCellsInSubGrid(Cell cell)
-        {
-            var cellsInSubGrid = new List<Cell>();
-
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

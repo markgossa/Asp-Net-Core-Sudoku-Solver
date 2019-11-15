@@ -14,8 +14,8 @@
                         @for (int column = 0; column < 9; column++)
                         {
                             <td class="table-sudoku-grid-cell">
-                                <input type="hidden" asp-for="Cells[row * 9 + column].RowNumber" value="@row" />
-                                <input type="hidden" asp-for="Cells[row * 9 + column].ColumnNumber" value="@column" />
+                                <input type="hidden" asp-for="Cells[row * 9 + column].Row" value="@row" />
+                                <input type="hidden" asp-for="Cells[row * 9 + column].Column" value="@column" />
                                 <input type="text" class="input-sudoku-grid-cell" asp-for="Cells[row * 9 + column].Value" />
                             </td>
                         }
