@@ -55,6 +55,10 @@ body {
   line-height: 60px; /* Vertically center the text there */
 }
 
+.tr, .th {
+    text-align: center;
+}
+
 .table-sudoku-grid {
     height: 500px;
     width: 500px;

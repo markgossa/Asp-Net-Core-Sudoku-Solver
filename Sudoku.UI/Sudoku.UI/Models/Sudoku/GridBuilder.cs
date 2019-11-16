@@ -9,12 +9,15 @@ namespace Sudoku.UI.Models.Sudoku
 {
     public class GridBuilder : IGridBuilder
     {
-        private readonly Grid _sudokoGrid;
+        private readonly Grid _grid;
 
         public GridBuilder()
         {
-            _sudokoGrid = new Grid();
-            _sudokoGrid.Cells = new List<Cell>();
+            _grid = new Grid();
+            _grid.Cells = new List<Cell>();
+            _grid.Boxes = new List<Box>();
+            AddCells();
+            AddBoxes();
         }
 
         private void AddCells()
@@ -23,15 +26,40 @@ namespace Sudoku.UI.Models.Sudoku
             {
                 for (int row = 1; row < 10; row++)
                 {
-                    _sudokoGrid.Cells.Add(new Cell() { Column = column, Row = row, Value = 0 });
+                    _grid.Cells.Add(new Cell() { Column = column, Row = row});
                 }
             }
         }
 
         public Grid GetSudokuGrid()
         {
-            AddCells();
-            return _sudokoGrid;
+            
+
+            return _grid;
+        }
+
+        private void AddBoxes()
+        {
+            _grid.Boxes = new List<Box>();
+            int row = 0;
+            while (row < 9)
+            {
+                int column = 0;
+                while (column < 9)
+                {
+                    _grid.Boxes.Add(new Box()
+                    {
+                        StartRow = row,
+                        EndRow = row + 2,
+                        StartColumn = column,
+                        EndColumn = column + 2
+                    });
+
+                    column += 3;
+                }
+
+                row += 3;
+            }
         }
     }
 }

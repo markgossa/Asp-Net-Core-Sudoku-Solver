@@ -1,29 +1,27 @@
-﻿@model Grid
+﻿@model List<Cell>
 
 @{
     ViewData["Title"] = "Home Page";
 }
 
-    <form method="post" asp-action="SubmitSudokuPuzzle">
+    <form method="post" asp-action="solve">
         <div class="div-sudoku-grid">
             <h2 class="display-4">Solve my Sudoku puzzle!</h2>
             <table class="table-sudoku-grid">
                 @for (int row = 0; row < 9; row++)
                 {
                     <tr>
-                        @for (int column = 0; column < 9; column++)
+                        @for (int column = 0; column < 9; column++) 
                         {
                             <td class="table-sudoku-grid-cell">
-                                <input type="hidden" asp-for="Cells[row * 9 + column].Row" value="@row" />
-                                <input type="hidden" asp-for="Cells[row * 9 + column].Column" value="@column" />
-                                <input type="text" class="input-sudoku-grid-cell" asp-for="Cells[row * 9 + column].Value" />
+                                <input type="hidden" asp-for="@Model[row * 9 + column].Row" value="@row" />
+                                <input type="hidden" asp-for="@Model[row * 9 + column].Column" value="@column" />
+                                <input type="text" class="input-sudoku-grid-cell" asp-for="@Model[row * 9 + column].Value" />
                             </td>
                         }
-
                     </tr>
                 }
             </table>
-            <button>Solve!</button>
-
+            <button type="submit">Solve!</button>
         </div>
     </form>

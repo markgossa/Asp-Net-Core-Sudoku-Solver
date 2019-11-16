@@ -12,78 +12,29 @@ namespace Sudoku.UI.Controllers
     public class HomeController : Controller
     {
         private IGrid _grid;
+        private ISolver _solver;
 
-        public HomeController(IGrid grid)
+        public HomeController(IGrid grid, ISolver solver)
         {
             _grid = grid;
-            _grid.Boxes = GetBoxes();
+            _solver = solver;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(List<Cell> cells)
         {
-            return View(_grid);
+            return View("Index", _grid.Cells);
+        }
+
+        public IActionResult Solve(List<Cell> cells)
+        {
+            _grid.Cells = cells;
+            var solvedGrid = _solver.Solve(_grid);
+            return View(solvedGrid.Cells);
         }
 
         public IActionResult About()
         {
             return View();
-        }
-
-        public IActionResult SubmitSudokuPuzzle(List<Cell> cells)
-        {
-            _grid.Cells = cells;
-            return View("Index", _grid);
-        }
-
-        public List<Cell> GetRelatedCells(Cell cell)
-        {
-            var relatedCells = new List<Cell>();
-            relatedCells.AddRange(_grid.Cells.Where(c => c.Row.Equals(cell.Row)
-            || c.Column.Equals(cell.Column)));
-            relatedCells.AddRange(GetBoxCells(GetCellBox(cell)));
-            relatedCells.Remove(cell);
-
-            return relatedCells;
-        }
-
-        private List<Cell> GetBoxCells(Box box)
-        {
-            return _grid.Cells.Where(c =>
-                c.Row >= box.StartRow &&
-                c.Row <= box.EndRow &&
-                c.Column >= box.StartColumn &&
-                c.Column <= box.EndColumn
-            ).ToList();
-        }
-
-        private Box GetCellBox(Cell cell)
-        {
-            return _grid.Boxes.FirstOrDefault(b =>
-                cell.Row >= b.StartRow &&
-                cell.Row <= b.EndRow &&
-                cell.Column >= b.StartColumn &&
-                cell.Column <= b.EndColumn
-            );
-        }
-
-        private List<Box> GetBoxes()
-        {
-            var boxes = new List<Box>();
-            int i = 0;
-            while (i < 9)
-            {
-                boxes.Add(new Box()
-                {
-                    StartRow = i,
-                    EndRow = i + 2,
-                    StartColumn = i,
-                    EndColumn = i + 2
-                });
-
-                i = i + 3;
-            }
-
-            return boxes;
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

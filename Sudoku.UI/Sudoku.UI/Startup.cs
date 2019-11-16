@@ -35,9 +35,10 @@ namespace Sudoku.UI
             });
 
             services.AddScoped<IGridBuilder, GridBuilder>();
+            services.AddScoped<ISolver, EliminationSolver>();
 
             services.AddScoped<IGrid>(sp => sp.GetService<IGridBuilder>().GetSudokuGrid());
-            //services.AddScoped<ISudokoGrid, SudokuGrid>();
+            //services.AddTransient<IGrid, Grid>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
