@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Sudoku.UI.Models.Sudoku.Puzzles
 {
-    public class SamplePuzzleEasy : IPuzzle
+    public class SamplePuzzleHard : IPuzzle
     {
         public List<int?> GetPuzzle()
         {

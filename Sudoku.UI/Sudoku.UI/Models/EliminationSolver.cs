@@ -2,8 +2,8 @@
 using Sudoku.UI.Services;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Sudoku.UI.Models
 {
@@ -18,18 +18,37 @@ namespace Sudoku.UI.Models
 
         public IGrid Solve()
         {
+            Cell nextSolvedCell;
+            while (true)
+            {
+                PopulateAllCellPossibleValues();
+                nextSolvedCell = FindNextCellToSolve();
+                if (nextSolvedCell != null)
+                {
+                    var cellValue = nextSolvedCell.PossibleValues.FirstOrDefault();
+                    nextSolvedCell.Value = cellValue;
+                    if (nextSolvedCell.PossibleValues.Count > 1)
+                    {
+                        Debug.WriteLine($"GUESS: Cell in column {nextSolvedCell.Column}, row {nextSolvedCell.Row} could be {String.Join(", ",nextSolvedCell.PossibleValues)} so guessed it is {cellValue}");
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"SOLVED: Cell in column {nextSolvedCell.Column}, row {nextSolvedCell.Row} is {cellValue}");
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            };
 
-
-
-            PopulateAllCellPossibleValues();
-            ProcessNextSolvedCell();
             return _grid;
         }
 
-        private void ProcessNextSolvedCell()
+        private Cell FindNextCellToSolve()
         {
-            var nextSolvedCell = _grid.Cells.FirstOrDefault(c => c.PossibleValues != null && c.PossibleValues.Count == 1);
-            nextSolvedCell.Value = nextSolvedCell.PossibleValues.FirstOrDefault();
+            return _grid.Cells.FirstOrDefault(c => !c.Value.HasValue && c.PossibleValues != null && c.PossibleValues.Count == 1)
+                ?? _grid.Cells.FirstOrDefault(c => !c.Value.HasValue && c.PossibleValues != null && c.PossibleValues.Count == 2);
         }
 
         private void PopulateAllCellPossibleValues()
