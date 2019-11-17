@@ -8,6 +8,6 @@ namespace Sudoku.UI.Services
 {
     public interface ISolver
     {
-        IGrid Solve(IGrid grid);
+        IGrid Solve();
     }
 }

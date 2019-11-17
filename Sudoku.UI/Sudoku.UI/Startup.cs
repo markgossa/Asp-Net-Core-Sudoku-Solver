@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sudoku.UI.Models;
 using Sudoku.UI.Models.Sudoku;
+using Sudoku.UI.Models.Sudoku.Puzzles;
 using Sudoku.UI.Services;
 
 namespace Sudoku.UI
@@ -34,11 +35,10 @@ namespace Sudoku.UI
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            services.AddScoped<IPuzzle, SamplePuzzleEasy>();
             services.AddScoped<IGridBuilder, GridBuilder>();
-            services.AddScoped<ISolver, EliminationSolver>();
-
             services.AddScoped<IGrid>(sp => sp.GetService<IGridBuilder>().GetSudokuGrid());
-            //services.AddTransient<IGrid, Grid>();
+            services.AddScoped<ISolver, EliminationSolver>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }

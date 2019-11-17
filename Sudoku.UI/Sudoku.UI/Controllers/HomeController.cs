@@ -28,7 +28,7 @@ namespace Sudoku.UI.Controllers
         public IActionResult Solve(List<Cell> cells)
         {
             _grid.Cells = cells;
-            var solvedGrid = _solver.Solve(_grid);
+            var solvedGrid = _solver.Solve();
             return View(solvedGrid.Cells);
         }
 

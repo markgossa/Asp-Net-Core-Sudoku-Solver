@@ -11,26 +11,54 @@ namespace Sudoku.UI.Models
     {
         private IGrid _grid;
 
-        public IGrid Solve(IGrid grid)
+        public EliminationSolver(IGrid grid)
         {
             _grid = grid;
-            _grid.Cells[5].Value = 9;
+        }
 
+        public IGrid Solve()
+        {
+
+
+
+            PopulateAllCellPossibleValues();
+            ProcessNextSolvedCell();
             return _grid;
         }
 
-        private List<Cell> GetRelatedCells(Cell cell)
+        private void ProcessNextSolvedCell()
         {
-            var relatedCells = new List<Cell>();
-            relatedCells.AddRange(_grid.Cells.Where(c => c.Row.Equals(cell.Row)
-            || c.Column.Equals(cell.Column)));
-            relatedCells.AddRange(GetBoxCells(GetCellBox(cell)));
-            relatedCells.Remove(cell);
-
-            return relatedCells;
+            var nextSolvedCell = _grid.Cells.FirstOrDefault(c => c.PossibleValues != null && c.PossibleValues.Count == 1);
+            nextSolvedCell.Value = nextSolvedCell.PossibleValues.FirstOrDefault();
         }
 
-        private List<Cell> GetBoxCells(Box box)
+        private void PopulateAllCellPossibleValues()
+        {
+            _grid.Cells.Where(c => !c.Value.HasValue).ToList()
+                .ForEach(c => c.PossibleValues = GetCellPossibleValues(c));
+        }
+
+        private List<int> GetCellPossibleValues(Cell cell)
+        {
+            var relatedCellUniqueValues = GetRelatedSolvedCells(cell)
+                .Select(c => c.Value ?? default(int))
+                .Distinct();
+
+            return Enumerable.Range(1, 9).Except(relatedCellUniqueValues).ToList();
+        }
+
+        private List<Cell> GetRelatedSolvedCells(Cell cell)
+        {
+            var relatedCells = new List<Cell>();
+            relatedCells.AddRange(_grid.Cells.Where(c => c.Row.Equals(cell.Row) && !c.Column.Equals(cell.Column)));
+            relatedCells.AddRange(_grid.Cells.Where(c => c.Column.Equals(cell.Column) && !c.Row.Equals(cell.Row)));
+            relatedCells.AddRange(GetBoxRelatedCells(GetCellBox(cell))
+                .Where(c => !c.Column.Equals(cell.Column) && !c.Row.Equals(cell.Row)));
+
+            return relatedCells.Where(c => c.Value.HasValue).ToList();
+        }
+
+        private List<Cell> GetBoxRelatedCells(Box box)
         {
             return _grid.Cells.Where(c =>
                 c.Row >= box.StartRow &&
