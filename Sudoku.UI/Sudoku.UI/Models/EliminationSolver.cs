@@ -9,8 +9,8 @@ namespace Sudoku.UI.Models
 {
     public class EliminationSolver : ISolver
     {
-        private IGrid _initialGrid;
-        private IGrid _solvedGrid;
+        private Grid _initialGrid;
+        private Grid _solvedGrid;
         private Attempt _attempt;
         private List<Attempt> _attempts;
 
@@ -20,7 +20,7 @@ namespace Sudoku.UI.Models
             _solvedGrid = new Grid();
         }
 
-        public IGrid Solve(Grid grid)
+        public Grid Solve(Grid grid)
         {
             _initialGrid = grid;
 
@@ -29,7 +29,7 @@ namespace Sudoku.UI.Models
             while (!isSolved)
             {
                 Debug.WriteLine($"ATTEMPT {i}: Start");
-                _solvedGrid.Cells = _initialGrid.Cells;
+                _solvedGrid = _initialGrid.Clone() as Grid;
                 AddClues();
                 _attempt = new Attempt(i);
                 SolveCells();
