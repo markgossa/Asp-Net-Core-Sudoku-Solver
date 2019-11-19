@@ -35,7 +35,7 @@ namespace Sudoku.UI
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.AddScoped<IPuzzle, SamplePuzzleEasy1>();
+            services.AddScoped<IPuzzle, SamplePuzzleHard>();
             services.AddScoped<IGridBuilder, GridBuilder>();
             services.AddScoped<IGrid>(sp => sp.GetService<IGridBuilder>().GetSudokuGrid());
             services.AddScoped<ISolver, EliminationSolver>();

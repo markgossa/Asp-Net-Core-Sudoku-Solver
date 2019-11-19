@@ -9,31 +9,70 @@ namespace Sudoku.UI.Models
 {
     public class EliminationSolver : ISolver
     {
-        private IGrid _grid;
+        private IGrid _initialGrid;
+        private IGrid _solvedGrid;
+        private Attempt _attempt;
+        private List<Attempt> _attempts;
 
-        public EliminationSolver(IGrid grid)
+        public EliminationSolver()
         {
-            _grid = grid;
+            _attempts = new List<Attempt>();
+            _solvedGrid = new Grid();
         }
 
-        public IGrid Solve()
+        public IGrid Solve(Grid grid)
         {
-            Cell nextSolvedCell;
+            _initialGrid = grid;
+
+            var i = 0;
+            var isSolved = false;
+            while (!isSolved)
+            {
+                Debug.WriteLine($"ATTEMPT {i}: Start");
+                _solvedGrid.Cells = _initialGrid.Cells;
+                AddClues();
+                _attempt = new Attempt(i);
+                SolveCells();
+                isSolved = CheckIfSolved();
+                _attempts.Add(_attempt);
+                Debug.WriteLine($"ATTEMPT {i}: End");
+                i++;
+            }
+
+            return _solvedGrid;
+        }
+
+        private void AddClues()
+        {
+            _solvedGrid.Cells.FirstOrDefault(c => c.Column == 4 && c.Row == 0).Value = 8;
+            _solvedGrid.Cells.FirstOrDefault(c => c.Column == 0 && c.Row == 0).Value = 5;
+            //_grid.Cells.FirstOrDefault(c => c.Column == 5 && c.Row == 0).Value = 6;
+        }
+
+        private bool CheckIfSolved()
+        {
+            return !_solvedGrid.Cells.Any(c => c.Value == null);
+        }
+
+        private void SolveCells()
+        {
+            Cell nextCellToSolve;
             while (true)
             {
                 PopulateAllCellPossibleValues();
-                nextSolvedCell = FindNextCellToSolve();
-                if (nextSolvedCell != null)
+                nextCellToSolve = FindNextCellToSolve();
+                if (nextCellToSolve != null)
                 {
-                    var cellValue = nextSolvedCell.PossibleValues.FirstOrDefault();
-                    nextSolvedCell.Value = cellValue;
-                    if (nextSolvedCell.PossibleValues.Count > 1)
+                    var cellValue = nextCellToSolve.PossibleValues.FirstOrDefault();
+                    nextCellToSolve.Value = cellValue;
+                    if (nextCellToSolve.PossibleValues.Count > 1)
                     {
-                        Debug.WriteLine($"GUESS: Cell in column {nextSolvedCell.Column}, row {nextSolvedCell.Row} could be {String.Join(", ",nextSolvedCell.PossibleValues)} so guessed it is {cellValue}");
+                        Debug.WriteLine($"GUESS: Cell in column {nextCellToSolve.Column}, row {nextCellToSolve.Row} could be {String.Join(", ", nextCellToSolve.PossibleValues)} so guessed it is {cellValue}");
+                        _attempt.Decisions.Add(new Decision(nextCellToSolve, nextCellToSolve.PossibleValues));
                     }
                     else
                     {
-                        Debug.WriteLine($"SOLVED: Cell in column {nextSolvedCell.Column}, row {nextSolvedCell.Row} is {cellValue}");
+                        Debug.WriteLine($"SOLVED: Cell in column {nextCellToSolve.Column}, row {nextCellToSolve.Row} is {cellValue}");
                     }
                 }
                 else
@@ -41,19 +80,17 @@ namespace Sudoku.UI.Models
                     break;
                 }
             };
-
-            return _grid;
         }
 
         private Cell FindNextCellToSolve()
         {
-            return _grid.Cells.FirstOrDefault(c => !c.Value.HasValue && c.PossibleValues != null && c.PossibleValues.Count == 1)
-                ?? _grid.Cells.FirstOrDefault(c => !c.Value.HasValue && c.PossibleValues != null && c.PossibleValues.Count == 2);
+            return _solvedGrid.Cells.FirstOrDefault(c => !c.Value.HasValue && c.PossibleValues != null && c.PossibleValues.Count == 1)
+                ?? _solvedGrid.Cells.FirstOrDefault(c => !c.Value.HasValue && c.PossibleValues != null && c.PossibleValues.Count == 2);
         }
 
         private void PopulateAllCellPossibleValues()
         {
-            _grid.Cells.Where(c => !c.Value.HasValue).ToList()
+            _solvedGrid.Cells.Where(c => !c.Value.HasValue).ToList()
                 .ForEach(c => c.PossibleValues = GetCellPossibleValues(c));
         }
 
@@ -69,8 +106,8 @@ namespace Sudoku.UI.Models
         private List<Cell> GetRelatedSolvedCells(Cell cell)
         {
             var relatedCells = new List<Cell>();
-            relatedCells.AddRange(_grid.Cells.Where(c => c.Row.Equals(cell.Row) && !c.Column.Equals(cell.Column)));
-            relatedCells.AddRange(_grid.Cells.Where(c => c.Column.Equals(cell.Column) && !c.Row.Equals(cell.Row)));
+            relatedCells.AddRange(_solvedGrid.Cells.Where(c => c.Row.Equals(cell.Row) && !c.Column.Equals(cell.Column)));
+            relatedCells.AddRange(_solvedGrid.Cells.Where(c => c.Column.Equals(cell.Column) && !c.Row.Equals(cell.Row)));
             relatedCells.AddRange(GetBoxRelatedCells(GetCellBox(cell))
                 .Where(c => !c.Column.Equals(cell.Column) && !c.Row.Equals(cell.Row)));
 
@@ -79,7 +116,7 @@ namespace Sudoku.UI.Models
 
         private List<Cell> GetBoxRelatedCells(Box box)
         {
-            return _grid.Cells.Where(c =>
+            return _solvedGrid.Cells.Where(c =>
                 c.Row >= box.StartRow &&
                 c.Row <= box.EndRow &&
                 c.Column >= box.StartColumn &&
@@ -89,7 +126,7 @@ namespace Sudoku.UI.Models
 
         private Box GetCellBox(Cell cell)
         {
-            return _grid.Boxes.FirstOrDefault(b =>
+            return _solvedGrid.Boxes.FirstOrDefault(b =>
                 cell.Row >= b.StartRow &&
                 cell.Row <= b.EndRow &&
                 cell.Column >= b.StartColumn &&
