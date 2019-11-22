@@ -12,9 +12,8 @@ namespace Sudoku.UI.Models
         private Grid _initialGrid;
         private Grid _solvedGrid;
         private Attempt _attempt;
-        private List<Attempt> _attempts;
-        private List<Cell> _nextAttempt;
-        private int _maxDecisionCount = 5;
+        private readonly List<Attempt> _attempts;
+        private const int _maxDecisionCount = 5;
 
         public EliminationSolver()
         {
@@ -52,7 +51,6 @@ namespace Sudoku.UI.Models
 
         private List<int> CreateNewAttemptModifier(int attemptNumber)
         {
-            //var lastAttemptDecisionCount = _attempts[_attempts.Count - 1].Decisions.Count; // this gets the number of guesses from the last attempt
             var nextAttemptModifier = Convert.ToString(attemptNumber + 1, 2).PadLeft(_maxDecisionCount, '0'); // 001
 
             var list = new List<int>();
@@ -73,7 +71,7 @@ namespace Sudoku.UI.Models
 
         private bool CheckIfSolved()
         {
-            return !_solvedGrid.Cells.Any(c => c.Value == null);
+            return !_solvedGrid.Cells.Any(c => c.Value.Equals(null));
         }
 
         private void SolveCells(List<int> attemptModifier = null)
@@ -89,7 +87,7 @@ namespace Sudoku.UI.Models
                     {
                         try
                         {
-                            ProcessNewCellDecision(nextCellToSolve, attemptModifier);
+                            ProcessCellDecision(nextCellToSolve, attemptModifier);
                         }
                         catch
                         {
@@ -111,7 +109,7 @@ namespace Sudoku.UI.Models
             };
         }
 
-        private void ProcessNewCellDecision(Cell cell, List<int> attemptModifier)
+        private void ProcessCellDecision(Cell cell, List<int> attemptModifier)
         {
             var cellDecisionNumber = _attempt?.Decisions.Count ?? 0;
 
@@ -142,7 +140,7 @@ namespace Sudoku.UI.Models
         private List<int> GetCellPossibleValues(Cell cell)
         {
             var relatedCellUniqueValues = GetRelatedSolvedCells(cell)
-                .Select(c => c.Value ?? default(int))
+                .Select(c => c.Value ?? default)
                 .Distinct();
 
             return Enumerable.Range(1, 9).Except(relatedCellUniqueValues).ToList();
