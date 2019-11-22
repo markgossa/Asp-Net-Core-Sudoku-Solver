@@ -9,12 +9,10 @@ namespace Sudoku.UI.Models
     public class Decision
     {
         public Cell FinalCell { get; }
-        public List<int> InitialPossibleValues { get; }
 
-        public Decision(Cell cell, List<int> initialPossibleValues)
+        public Decision(Cell cell)
         {
-            FinalCell = cell;
-            InitialPossibleValues = initialPossibleValues;
+            FinalCell = new Cell() { Column = cell.Column, Row = cell.Row, Value = cell.Value };
         }
     }
 }

@@ -13,6 +13,8 @@ namespace Sudoku.UI.Models
         private Grid _solvedGrid;
         private Attempt _attempt;
         private List<Attempt> _attempts;
+        private List<Cell> _nextAttempt;
+        private int _maxDecisionCount = 12;
 
         public EliminationSolver()
         {
@@ -23,30 +25,50 @@ namespace Sudoku.UI.Models
         public Grid Solve(Grid grid)
         {
             _initialGrid = grid;
-
-            var i = 0;
+            var attemptNumber = 0;
             var isSolved = false;
+            List<int> attemptModifier = null;
             while (!isSolved)
             {
-                Debug.WriteLine($"ATTEMPT {i}: Start");
+                Debug.WriteLine($"ATTEMPT {attemptNumber}: Start");
                 _solvedGrid = _initialGrid.Clone() as Grid;
                 AddClues();
-                _attempt = new Attempt(i);
-                SolveCells();
+                _attempt = new Attempt(attemptNumber);
+                SolveCells(attemptModifier);
+
                 isSolved = CheckIfSolved();
                 _attempts.Add(_attempt);
-                Debug.WriteLine($"ATTEMPT {i}: End");
-                i++;
+                if(!isSolved)
+                {
+                    attemptModifier = CreateNewAttemptModifier(attemptNumber);
+                }
+                
+                Debug.WriteLine($"ATTEMPT {attemptNumber}: End");
+                attemptNumber++;
             }
 
             return _solvedGrid;
+        }
+
+        private List<int> CreateNewAttemptModifier(int attemptNumber)
+        {
+            //var lastAttemptDecisionCount = _attempts[_attempts.Count - 1].Decisions.Count; // this gets the number of guesses from the last attempt
+            var nextAttemptModifier = Convert.ToString(Convert.ToInt32("0", 2) + attemptNumber + 1, 2).PadLeft(_maxDecisionCount, '0'); // 001
+
+            var list = new List<int>();
+            for (int i = 0; i < nextAttemptModifier.Length; i++)
+            {
+                list.Add(int.Parse(nextAttemptModifier[i].ToString()));
+            }
+
+            return list;
         }
 
         private void AddClues()
         {
             _solvedGrid.Cells.FirstOrDefault(c => c.Column == 4 && c.Row == 0).Value = 8;
             _solvedGrid.Cells.FirstOrDefault(c => c.Column == 0 && c.Row == 0).Value = 5;
-            //_grid.Cells.FirstOrDefault(c => c.Column == 5 && c.Row == 0).Value = 6;
+            //_solvedGrid.Cells.FirstOrDefault(c => c.Column == 5 && c.Row == 0).Value = 6;
         }
 
         private bool CheckIfSolved()
@@ -54,7 +76,7 @@ namespace Sudoku.UI.Models
             return !_solvedGrid.Cells.Any(c => c.Value == null);
         }
 
-        private void SolveCells()
+        private void SolveCells(List<int> attemptModifier = null)
         {
             Cell nextCellToSolve;
             while (true)
@@ -63,15 +85,22 @@ namespace Sudoku.UI.Models
                 nextCellToSolve = FindNextCellToSolve();
                 if (nextCellToSolve != null)
                 {
-                    var cellValue = nextCellToSolve.PossibleValues.FirstOrDefault();
-                    nextCellToSolve.Value = cellValue;
                     if (nextCellToSolve.PossibleValues.Count > 1)
                     {
-                        Debug.WriteLine($"GUESS: Cell in column {nextCellToSolve.Column}, row {nextCellToSolve.Row} could be {String.Join(", ", nextCellToSolve.PossibleValues)} so guessed it is {cellValue}");
-                        _attempt.Decisions.Add(new Decision(nextCellToSolve, nextCellToSolve.PossibleValues));
+                        try
+                        {
+                            ProcessNewCellDecision(nextCellToSolve, attemptModifier);
+                        }
+                        catch
+                        {
+                            Debug.WriteLine("ATTEMPT: Abort. Too many decisions required.");
+                            break;
+                        }
                     }
                     else
                     {
+                        var cellValue = nextCellToSolve.PossibleValues.FirstOrDefault();
+                        nextCellToSolve.Value = cellValue;
                         Debug.WriteLine($"SOLVED: Cell in column {nextCellToSolve.Column}, row {nextCellToSolve.Row} is {cellValue}");
                     }
                 }
@@ -80,6 +109,22 @@ namespace Sudoku.UI.Models
                     break;
                 }
             };
+        }
+
+        private void ProcessNewCellDecision(Cell cell, List<int> attemptModifier)
+        {
+            var cellDecisionNumber = _attempt?.Decisions.Count ?? 0;
+
+            if (cellDecisionNumber == 4)
+            {
+                throw new TooManyDecisionsException();
+            }
+
+            var cellPossibleValueIndex = attemptModifier?[cellDecisionNumber] ?? 0; 
+            cell.Value = cell.PossibleValues[cellPossibleValueIndex];
+
+            _attempt.Decisions.Add(new Decision(cell));
+            Debug.WriteLine($"GUESS: Cell in column {cell.Column}, row {cell.Row} could be {String.Join(", or ", cell.PossibleValues)} so guessed it is {cell.Value}");
         }
 
         private Cell FindNextCellToSolve()
