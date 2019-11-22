@@ -14,7 +14,7 @@ namespace Sudoku.UI.Models
         private Attempt _attempt;
         private List<Attempt> _attempts;
         private List<Cell> _nextAttempt;
-        private int _maxDecisionCount = 12;
+        private int _maxDecisionCount = 5;
 
         public EliminationSolver()
         {
@@ -53,7 +53,7 @@ namespace Sudoku.UI.Models
         private List<int> CreateNewAttemptModifier(int attemptNumber)
         {
             //var lastAttemptDecisionCount = _attempts[_attempts.Count - 1].Decisions.Count; // this gets the number of guesses from the last attempt
-            var nextAttemptModifier = Convert.ToString(Convert.ToInt32("0", 2) + attemptNumber + 1, 2).PadLeft(_maxDecisionCount, '0'); // 001
+            var nextAttemptModifier = Convert.ToString(attemptNumber + 1, 2).PadLeft(_maxDecisionCount, '0'); // 001
 
             var list = new List<int>();
             for (int i = 0; i < nextAttemptModifier.Length; i++)
@@ -66,8 +66,8 @@ namespace Sudoku.UI.Models
 
         private void AddClues()
         {
-            _solvedGrid.Cells.FirstOrDefault(c => c.Column == 4 && c.Row == 0).Value = 8;
-            _solvedGrid.Cells.FirstOrDefault(c => c.Column == 0 && c.Row == 0).Value = 5;
+            //_solvedGrid.Cells.FirstOrDefault(c => c.Column == 4 && c.Row == 0).Value = 8;
+            //_solvedGrid.Cells.FirstOrDefault(c => c.Column == 0 && c.Row == 0).Value = 5;
             //_solvedGrid.Cells.FirstOrDefault(c => c.Column == 5 && c.Row == 0).Value = 6;
         }
 
@@ -101,7 +101,7 @@ namespace Sudoku.UI.Models
                     {
                         var cellValue = nextCellToSolve.PossibleValues.FirstOrDefault();
                         nextCellToSolve.Value = cellValue;
-                        Debug.WriteLine($"SOLVED: Cell in column {nextCellToSolve.Column}, row {nextCellToSolve.Row} is {cellValue}");
+                        //Debug.WriteLine($"SOLVED: Cell in column {nextCellToSolve.Column}, row {nextCellToSolve.Row} is {cellValue}");
                     }
                 }
                 else
@@ -115,7 +115,7 @@ namespace Sudoku.UI.Models
         {
             var cellDecisionNumber = _attempt?.Decisions.Count ?? 0;
 
-            if (cellDecisionNumber == 4)
+            if (cellDecisionNumber == _maxDecisionCount)
             {
                 throw new TooManyDecisionsException();
             }
