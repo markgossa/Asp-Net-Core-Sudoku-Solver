@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace Sudoku.UI.Models.Sudoku
 {
-    public class Grid : IGrid, ICloneable
+    public class Grid : ICloneable
     {
         [BindProperty]
         public List<Cell> Cells { get; set; }
-        public List<Box> Boxes { get; set; }
+        public List<Box> Boxes { get; }
 
         public Grid()
         {
@@ -64,20 +64,13 @@ namespace Sudoku.UI.Models.Sudoku
         {
             var result = new Grid();
 
-            Cells.ForEach(c => result.Cells.Add(new Cell()
-            {
-                Column = c.Column,
-                Row = c.Row,
-                Value = c.Value
-            }));
 
-            Boxes.ForEach(b => result.Boxes.Add(new Box()
+            Cells.ForEach(cell =>
             {
-                EndColumn = b.EndColumn,
-                EndRow = b.EndRow,
-                StartColumn = b.StartColumn,
-                StartRow = b.StartRow
-            }));
+                var setCell = result.Cells.FirstOrDefault(c => c.Column == cell.Column && c.Row == cell.Row);
+                setCell.PossibleValues = cell.PossibleValues;
+                setCell.Value = cell.Value;
+            });
 
             return result;
         }
