@@ -10,40 +10,20 @@ namespace Sudoku.UI.Models
 {
     public class EliminationSolver : ISolver
     {
-        private Attempt _attempt;
-        private readonly List<Attempt> _attempts;
-        private const int _maxDecisionCount = 10;
-
-        public EliminationSolver()
-        {
-            _attempts = new List<Attempt>();
-        }
+        private const int _maxDecisionCount = 5;
 
         public async Task<Grid> Solve(Grid gridToSolve)
         {
-            //var tasks = new List<Task<(Grid, bool)>>();
-            //List<int> attemptModifier = null;
-            //for (int attemptNumber = 0; attemptNumber < Math.Pow(2, _maxDecisionCount); attemptNumber++)
-            //{
-            //    attemptModifier = CreateNewAttemptModifier(attemptNumber);
-            //    tasks.Add(CreateNewAtempt(attemptNumber, gridToSolve, attemptModifier));
-            //}
-
-            //var result = await Task.WhenAll<(Grid, bool)>(tasks);
-
-            //var solution = result.FirstOrDefault(r => r.Item2).Item1;
-
-            var results = new List<(Grid, bool)>();
+            var tasks = new List<Task<(Grid, bool)>>();
             List<int> attemptModifier = null;
             for (int attemptNumber = 0; attemptNumber < Math.Pow(2, _maxDecisionCount); attemptNumber++)
             {
                 attemptModifier = CreateNewAttemptModifier(attemptNumber);
-                var task = CreateNewAtempt(attemptNumber, gridToSolve, attemptModifier);
-                await task;
-                results.Add(task.Result);
+                tasks.Add(CreateNewAtempt(attemptNumber, gridToSolve, attemptModifier));
             }
 
-            var solution = results.FirstOrDefault(r => r.Item2).Item1;
+            var result = await Task.WhenAll<(Grid, bool)>(tasks);
+            var solution = result.FirstOrDefault(r => r.Item2).Item1;
 
             return solution;
         }
@@ -54,12 +34,10 @@ namespace Sudoku.UI.Models
             Debug.WriteLine($"ATTEMPT {attemptNumber}: Start");
             Debug.WriteLine($"ATTEMPT {attemptNumber}: Attempt modifier {string.Join(", ", attemptModifier)}");
             grid = gridToSolve.Clone() as Grid;
-            _attempt = new Attempt(attemptNumber);
 
             await Task.Run(() =>
             {
-                grid = SolveCells(grid, attemptModifier);
-                _attempts.Add(_attempt);
+                grid = SolveCells(grid, attemptNumber, new Attempt(attemptNumber), attemptModifier);
             });
 
             var isSolved = CheckIfSolved(grid);
@@ -69,13 +47,14 @@ namespace Sudoku.UI.Models
             }
 
             Debug.WriteLine($"ATTEMPT {attemptNumber}: End");
+            Debug.WriteLine($"ATTEMPT {attemptNumber}: Cells: {String.Join(", ", grid.Cells.Select(c => c.Value).ToList())}");
 
             return (grid, isSolved);
         }
 
         private List<int> CreateNewAttemptModifier(int attemptNumber)
         {
-            var nextAttemptModifier = Convert.ToString(attemptNumber + 1, 2).PadLeft(_maxDecisionCount, '0'); // 001
+            var nextAttemptModifier = Convert.ToString(attemptNumber + 1, 2).PadLeft(_maxDecisionCount, '0');
 
             var list = new List<int>();
             for (int i = 0; i < nextAttemptModifier.Length; i++)
@@ -91,7 +70,7 @@ namespace Sudoku.UI.Models
             return !grid.Cells.Any(c => c.Value.Equals(null));
         }
 
-        private Grid SolveCells(Grid grid, List<int> attemptModifier = null)
+        private Grid SolveCells(Grid grid, int attemptNumber, Attempt attempt, List<int> attemptModifier = null)
         {
             Cell nextCellToSolve;
             while (true)
@@ -104,11 +83,11 @@ namespace Sudoku.UI.Models
                     {
                         try
                         {
-                            ProcessCellDecision(nextCellToSolve, attemptModifier);
+                            ProcessCellDecision(nextCellToSolve, attemptModifier, attemptNumber, attempt);
                         }
                         catch
                         {
-                            Debug.WriteLine("ATTEMPT: Abort. Too many decisions required.");
+                            Debug.WriteLine($"ATTEMPT {attemptNumber}: Abort. Too many decisions required.");
                             break;
                         }
                     }
@@ -128,9 +107,9 @@ namespace Sudoku.UI.Models
             return grid;
         }
 
-        private void ProcessCellDecision(Cell cell, List<int> attemptModifier)
+        private void ProcessCellDecision(Cell cell, List<int> attemptModifier, int attemptNumber, Attempt attempt)
         {
-            var cellDecisionNumber = _attempt?.Decisions.Count ?? 0;
+            var cellDecisionNumber = attempt?.Decisions.Count ?? 0;
 
             if (cellDecisionNumber == _maxDecisionCount)
             {
@@ -140,8 +119,8 @@ namespace Sudoku.UI.Models
             var cellPossibleValueIndex = attemptModifier?[cellDecisionNumber] ?? 0; 
             cell.Value = cell.PossibleValues[cellPossibleValueIndex];
 
-            _attempt.Decisions.Add(new Decision(cell));
-            Debug.WriteLine($"GUESS: Cell in column {cell.Column}, row {cell.Row} could be {String.Join(", or ", cell.PossibleValues)} so guessed it is {cell.Value}");
+            attempt.Decisions.Add(new Decision(cell));
+            Debug.WriteLine($"ATTEMPT {attemptNumber}: GUESS Cell in column {cell.Column}, row {cell.Row} could be {String.Join(", or ", cell.PossibleValues)} so guessed it is {cell.Value}");
         }
 
         private Cell FindNextCellToSolve(Grid grid)
