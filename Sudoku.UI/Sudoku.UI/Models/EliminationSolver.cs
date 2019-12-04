@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sudoku.UI.Models
@@ -12,23 +13,36 @@ namespace Sudoku.UI.Models
     {
         private const int _maxDecisionCount = 5;
 
-        public async Task<Grid> Solve(Grid gridToSolve)
+        public async Task<Grid> SolveAsync(Grid gridToSolve)
         {
             var tasks = new List<Task<(Grid, bool)>>();
             List<int> attemptModifier = null;
             for (int attemptNumber = 0; attemptNumber < Math.Pow(2, _maxDecisionCount); attemptNumber++)
             {
                 attemptModifier = CreateNewAttemptModifier(attemptNumber);
-                tasks.Add(CreateNewAtempt(attemptNumber, gridToSolve, attemptModifier));
+                tasks.Add(CreateNewAtemptAsync(attemptNumber, gridToSolve, attemptModifier));
             }
 
-            var result = await Task.WhenAll<(Grid, bool)>(tasks);
-            var solution = result.FirstOrDefault(r => r.Item2).Item1;
+            Grid solution = null;
+            (Grid, bool) attempt = (null, false);
+            var i = 0;
+            while (!attempt.Item2)
+            {
+                var completed = await Task.WhenAny(tasks.ToArray());
+                attempt = completed.Result;
+                Debug.WriteLine($"i = {i}, Id = {completed.Id}, solved = {attempt.Item2}");
+                if (completed.Status.Equals(TaskStatus.RanToCompletion) && attempt.Item2)
+                {
+                    solution = attempt.Item1;
+                }
+
+                tasks.Remove(completed);
+            }
 
             return solution;
         }
 
-        private async Task<(Grid, bool)> CreateNewAtempt(int attemptNumber, Grid gridToSolve, List<int> attemptModifier)
+        private async Task<(Grid, bool)> CreateNewAtemptAsync(int attemptNumber, Grid gridToSolve, List<int> attemptModifier)
         {
             Grid grid = null;
             Debug.WriteLine($"ATTEMPT {attemptNumber}: Start");
