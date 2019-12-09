@@ -4,41 +4,34 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sudoku.UI.Models
 {
     public class EliminationSolver : ISolver
     {
-        private const int _maxDecisionCount = 5;
+        private const int _maxDecisionCount = 14;
 
         public async Task<Grid> SolveAsync(Grid gridToSolve)
         {
-            var tasks = new List<Task<(Grid, bool)>>();
+            await foreach (var result in SolveAsyncHelper(gridToSolve))
+            {
+                if (result.Item2)
+                {
+                    return result.Item1;
+                }
+            }
+
+            return new Grid();
+        }
+
+        public async IAsyncEnumerable<(Grid, bool)> SolveAsyncHelper(Grid gridToSolve)
+        {
             for (int attemptNumber = 0; attemptNumber < Math.Pow(2, _maxDecisionCount); attemptNumber++)
             {
                 var attemptModifier = CreateNewAttemptModifier(attemptNumber);
-                tasks.Add(CreateNewAtemptAsync(attemptNumber, gridToSolve, attemptModifier));
+                yield return await CreateNewAtemptAsync(attemptNumber, gridToSolve, attemptModifier);
             }
-
-            Grid solution = null;
-            (Grid, bool) attempt = (null, false);
-            var i = 0;
-            while (!attempt.Item2)
-            {
-                var completed = await Task.WhenAny(tasks.ToArray());
-                attempt = completed.Result;
-                Debug.WriteLine($"i = {i}, Id = {completed.Id}, solved = {attempt.Item2}");
-                if (completed.Status.Equals(TaskStatus.RanToCompletion) && attempt.Item2)
-                {
-                    solution = attempt.Item1;
-                }
-
-                tasks.Remove(completed);
-            }
-
-            return solution;
         }
 
         private async Task<(Grid, bool)> CreateNewAtemptAsync(int attemptNumber, Grid gridToSolve, List<int> attemptModifier)
@@ -70,11 +63,11 @@ namespace Sudoku.UI.Models
             var nextAttemptModifier = Convert.ToString(attemptNumber + 1, 2).PadLeft(_maxDecisionCount, '0');
 
             var list = new List<int>();
-            for (int i = 0; i < nextAttemptModifier.Length; i++)
+            for (int i = nextAttemptModifier.Length - 1; i >= 0; i--)
             {
                 list.Add(int.Parse(nextAttemptModifier[i].ToString()));
             }
-
+            
             return list;
         }
 
