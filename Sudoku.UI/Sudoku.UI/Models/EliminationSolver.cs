@@ -16,10 +16,9 @@ namespace Sudoku.UI.Models
         public async Task<Grid> SolveAsync(Grid gridToSolve)
         {
             var tasks = new List<Task<(Grid, bool)>>();
-            List<int> attemptModifier = null;
             for (int attemptNumber = 0; attemptNumber < Math.Pow(2, _maxDecisionCount); attemptNumber++)
             {
-                attemptModifier = CreateNewAttemptModifier(attemptNumber);
+                var attemptModifier = CreateNewAttemptModifier(attemptNumber);
                 tasks.Add(CreateNewAtemptAsync(attemptNumber, gridToSolve, attemptModifier));
             }
 

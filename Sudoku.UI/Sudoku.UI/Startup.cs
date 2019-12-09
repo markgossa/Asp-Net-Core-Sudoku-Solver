@@ -30,12 +30,12 @@ namespace Sudoku.UI
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            services.AddControllersWithViews();
+
             services.AddScoped<IPuzzle, SamplePuzzleHard>();
             services.AddScoped<IGridBuilder, GridBuilder>();
             services.AddScoped<Grid>(sp => sp.GetService<IGridBuilder>().GetSudokuGrid());
             services.AddScoped<ISolver, EliminationSolver>();
-
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -56,11 +56,12 @@ namespace Sudoku.UI
             app.UseStaticFiles();
             app.UseCookiePolicy();
 
-            app.UseMvc(routes =>
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapRoute(
+                endpoints.MapControllerRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
             });
         }
     }

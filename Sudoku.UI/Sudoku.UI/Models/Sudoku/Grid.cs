@@ -63,8 +63,6 @@ namespace Sudoku.UI.Models.Sudoku
         public object Clone()
         {
             var result = new Grid();
-
-
             Cells.ForEach(cell =>
             {
                 var setCell = result.Cells.FirstOrDefault(c => c.Column == cell.Column && c.Row == cell.Row);
