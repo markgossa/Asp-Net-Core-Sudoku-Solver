@@ -14,7 +14,7 @@ namespace Sudoku.UI.Models
 
         public async Task<Grid> SolveAsync(Grid gridToSolve)
         {
-            await foreach (var result in SolveAsyncHelper(gridToSolve))
+            await foreach (var result in RunAttemptsAsync(gridToSolve))
             {
                 if (result.Item2)
                 {
@@ -25,7 +25,7 @@ namespace Sudoku.UI.Models
             return new Grid();
         }
 
-        public async IAsyncEnumerable<(Grid, bool)> SolveAsyncHelper(Grid gridToSolve)
+        public async IAsyncEnumerable<(Grid, bool)> RunAttemptsAsync(Grid gridToSolve)
         {
             for (int attemptNumber = 0; attemptNumber < Math.Pow(2, _maxDecisionCount); attemptNumber++)
             {
@@ -37,8 +37,8 @@ namespace Sudoku.UI.Models
         private async Task<(Grid, bool)> CreateNewAtemptAsync(int attemptNumber, Grid gridToSolve, List<int> attemptModifier)
         {
             Grid grid = null;
-            Debug.WriteLine($"ATTEMPT {attemptNumber}: Start");
-            Debug.WriteLine($"ATTEMPT {attemptNumber}: Attempt modifier {string.Join(", ", attemptModifier)}");
+            Log(attemptNumber, "Start");
+            Log(attemptNumber, $"Attempt modifier { string.Join(", ", attemptModifier)}");
             grid = gridToSolve.Clone() as Grid;
 
             await Task.Run(() =>
@@ -49,11 +49,11 @@ namespace Sudoku.UI.Models
             var isSolved = CheckIfSolved(grid);
             if (isSolved)
             {
-                Debug.WriteLine($"ATTEMPT {attemptNumber}: SOLVED!");
+                Log(attemptNumber, "SOLVED!");
             }
 
-            Debug.WriteLine($"ATTEMPT {attemptNumber}: End");
-            Debug.WriteLine($"ATTEMPT {attemptNumber}: Cells: {String.Join(", ", grid.Cells.Select(c => c.Value).ToList())}");
+            Log(attemptNumber, "End");
+            Log(attemptNumber, $"Cells: {String.Join(", ", grid.Cells.Select(c => c.Value).ToList())}");
 
             return (grid, isSolved);
         }
@@ -93,7 +93,7 @@ namespace Sudoku.UI.Models
                         }
                         catch
                         {
-                            Debug.WriteLine($"ATTEMPT {attemptNumber}: Abort. Too many decisions required.");
+                            Log(attemptNumber, "Abort. Too many decisions required.");
                             break;
                         }
                     }
@@ -126,7 +126,7 @@ namespace Sudoku.UI.Models
             cell.Value = cell.PossibleValues[cellPossibleValueIndex];
 
             attempt.Decisions.Add(new Decision(cell));
-            Debug.WriteLine($"ATTEMPT {attemptNumber}: GUESS Cell in column {cell.Column}, row {cell.Row} could be {String.Join(", or ", cell.PossibleValues)} so guessed it is {cell.Value}");
+            Log(attemptNumber, $"GUESS Cell in column {cell.Column}, row {cell.Row} could be {String.Join(", or ", cell.PossibleValues)} so guessed it is {cell.Value}");
         }
 
         private Cell FindNextCellToSolve(Grid grid)
@@ -179,6 +179,12 @@ namespace Sudoku.UI.Models
                 cell.Column >= b.StartColumn &&
                 cell.Column <= b.EndColumn
             );
+        }
+
+        [Conditional("LOG")]
+        private static void Log(int attemptNumber, string message)
+        {
+            Debug.WriteLine($"ATTEMPT {attemptNumber}: {message}");
         }
     }
 }
