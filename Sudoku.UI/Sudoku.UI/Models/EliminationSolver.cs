@@ -14,6 +14,7 @@ namespace Sudoku.UI.Models
         private Grid gridToSolve;
         private Grid gridSolution;
         private int attemptNumber;
+        private List<int> attemptModifier;
 
         public async Task<Grid> SolveAsync(Grid grid)
         {
@@ -33,12 +34,25 @@ namespace Sudoku.UI.Models
         {
             for (attemptNumber = 0; attemptNumber < Math.Pow(2, _maxDecisionCount); attemptNumber++)
             {
-                var attemptModifier = CreateNewAttemptModifier();
-                yield return await CreateNewAttemptAsync(attemptModifier);
+                attemptModifier = CreateNewAttemptModifier();
+                yield return await CreateNewAttemptAsync();
             }
         }
 
-        private async Task<bool> CreateNewAttemptAsync(List<int> attemptModifier)
+        private List<int> CreateNewAttemptModifier()
+        {
+            var nextAttemptModifier = Convert.ToString(attemptNumber + 1, 2).PadLeft(_maxDecisionCount, '0');
+
+            var list = new List<int>();
+            for (int i = nextAttemptModifier.Length - 1; i >= 0; i--)
+            {
+                list.Add(int.Parse(nextAttemptModifier[i].ToString()));
+            }
+
+            return list;
+        }
+
+        private async Task<bool> CreateNewAttemptAsync()
         {
             Log("Start");
             Log($"Attempt modifier { string.Join(", ", attemptModifier)}");
@@ -46,7 +60,7 @@ namespace Sudoku.UI.Models
 
             await Task.Run(() =>
             {
-                gridSolution = SolveCells(new Attempt(attemptNumber), attemptModifier);
+                gridSolution = SolveCells(new Attempt(attemptNumber));
             });
 
             var isSolved = CheckIfSolved();
@@ -61,38 +75,24 @@ namespace Sudoku.UI.Models
             return isSolved;
         }
 
-        private List<int> CreateNewAttemptModifier()
-        {
-            var nextAttemptModifier = Convert.ToString(attemptNumber + 1, 2).PadLeft(_maxDecisionCount, '0');
-
-            var list = new List<int>();
-            for (int i = nextAttemptModifier.Length - 1; i >= 0; i--)
-            {
-                list.Add(int.Parse(nextAttemptModifier[i].ToString()));
-            }
-            
-            return list;
-        }
-
         private bool CheckIfSolved()
         {
             return !gridSolution.Cells.Any(c => c.Value.Equals(null));
         }
 
-        private Grid SolveCells(Attempt attempt, List<int> attemptModifier = null)
+        private Grid SolveCells(Attempt attempt)
         {
-            Cell nextCellToSolve;
             while (true)
             {
                 PopulateAllCellPossibleValues();
-                nextCellToSolve = FindNextCellToSolve();
+                var nextCellToSolve = FindNextCellToSolve();
                 if (nextCellToSolve != null)
                 {
                     if (nextCellToSolve.PossibleValues.Count > 1)
                     {
                         try
                         {
-                            ProcessCellDecision(nextCellToSolve, attemptModifier, attempt);
+                            ProcessCellDecision(nextCellToSolve, attempt);
                         }
                         catch
                         {
@@ -102,8 +102,7 @@ namespace Sudoku.UI.Models
                     }
                     else
                     {
-                        var cellValue = nextCellToSolve.PossibleValues.FirstOrDefault();
-                        nextCellToSolve.Value = cellValue;
+                        nextCellToSolve.Value = nextCellToSolve.PossibleValues.FirstOrDefault();
                     }
                 }
                 else
@@ -115,10 +114,9 @@ namespace Sudoku.UI.Models
             return gridSolution;
         }
 
-        private void ProcessCellDecision(Cell cell, List<int> attemptModifier, Attempt attempt)
+        private void ProcessCellDecision(Cell cell, Attempt attempt)
         {
             var cellDecisionNumber = attempt?.Decisions.Count ?? 0;
-
             if (cellDecisionNumber == _maxDecisionCount)
             {
                 throw new TooManyDecisionsException();
@@ -139,8 +137,7 @@ namespace Sudoku.UI.Models
 
         private void PopulateAllCellPossibleValues()
         {
-            gridSolution.Cells.Where(c => !c.Value.HasValue).ToList()
-                .ForEach(c => c.PossibleValues = GetCellPossibleValues(c));
+            gridSolution.Cells.Where(c => !c.Value.HasValue).ToList().ForEach(c => c.PossibleValues = GetCellPossibleValues(c));
         }
 
         private List<int> GetCellPossibleValues(Cell cell)
@@ -157,8 +154,7 @@ namespace Sudoku.UI.Models
             var relatedCells = new List<Cell>();
             relatedCells.AddRange(gridSolution.Cells.Where(c => c.Row.Equals(cell.Row) && !c.Column.Equals(cell.Column)));
             relatedCells.AddRange(gridSolution.Cells.Where(c => c.Column.Equals(cell.Column) && !c.Row.Equals(cell.Row)));
-            relatedCells.AddRange(GetBoxRelatedCells(GetCellBox(cell))
-                .Where(c => !c.Column.Equals(cell.Column) && !c.Row.Equals(cell.Row)));
+            relatedCells.AddRange(GetBoxRelatedCells(GetCellBox(cell)).Where(c => !c.Column.Equals(cell.Column) && !c.Row.Equals(cell.Row)));
 
             return relatedCells.Where(c => c.Value.HasValue).ToList();
         }
