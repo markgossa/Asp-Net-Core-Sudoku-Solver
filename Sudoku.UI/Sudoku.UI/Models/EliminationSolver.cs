@@ -11,51 +11,53 @@ namespace Sudoku.UI.Models
     public class EliminationSolver : ISolver
     {
         private const int _maxDecisionCount = 14;
+        private Grid gridToSolve;
+        private Grid gridSolution;
 
-        public async Task<Grid> SolveAsync(Grid gridToSolve)
+        public async Task<Grid> SolveAsync(Grid grid)
         {
-            await foreach (var result in RunAttemptsAsync(gridToSolve))
+            gridToSolve = grid;
+            await foreach (var result in RunAttemptsAsync())
             {
-                if (result.Item2)
+                if (result)
                 {
-                    return result.Item1;
+                    return gridSolution;
                 }
             }
 
             return new Grid();
         }
 
-        public async IAsyncEnumerable<(Grid, bool)> RunAttemptsAsync(Grid gridToSolve)
+        public async IAsyncEnumerable<bool> RunAttemptsAsync()
         {
             for (int attemptNumber = 0; attemptNumber < Math.Pow(2, _maxDecisionCount); attemptNumber++)
             {
                 var attemptModifier = CreateNewAttemptModifier(attemptNumber);
-                yield return await CreateNewAtemptAsync(attemptNumber, gridToSolve, attemptModifier);
+                yield return await CreateNewAttemptAsync(attemptNumber, attemptModifier);
             }
         }
 
-        private async Task<(Grid, bool)> CreateNewAtemptAsync(int attemptNumber, Grid gridToSolve, List<int> attemptModifier)
+        private async Task<bool> CreateNewAttemptAsync(int attemptNumber, List<int> attemptModifier)
         {
-            Grid grid = null;
             Log(attemptNumber, "Start");
             Log(attemptNumber, $"Attempt modifier { string.Join(", ", attemptModifier)}");
-            grid = gridToSolve.Clone() as Grid;
+            gridSolution = gridToSolve.Clone() as Grid;
 
             await Task.Run(() =>
             {
-                grid = SolveCells(grid, attemptNumber, new Attempt(attemptNumber), attemptModifier);
+                gridSolution = SolveCells(attemptNumber, new Attempt(attemptNumber), attemptModifier);
             });
 
-            var isSolved = CheckIfSolved(grid);
+            var isSolved = CheckIfSolved();
             if (isSolved)
             {
                 Log(attemptNumber, "SOLVED!");
             }
 
             Log(attemptNumber, "End");
-            Log(attemptNumber, $"Cells: {String.Join(", ", grid.Cells.Select(c => c.Value).ToList())}");
+            Log(attemptNumber, $"Cells: {String.Join(", ", gridSolution.Cells.Select(c => c.Value).ToList())}");
 
-            return (grid, isSolved);
+            return isSolved;
         }
 
         private List<int> CreateNewAttemptModifier(int attemptNumber)
@@ -71,18 +73,18 @@ namespace Sudoku.UI.Models
             return list;
         }
 
-        private bool CheckIfSolved(Grid grid)
+        private bool CheckIfSolved()
         {
-            return !grid.Cells.Any(c => c.Value.Equals(null));
+            return !gridSolution.Cells.Any(c => c.Value.Equals(null));
         }
 
-        private Grid SolveCells(Grid grid, int attemptNumber, Attempt attempt, List<int> attemptModifier = null)
+        private Grid SolveCells(int attemptNumber, Attempt attempt, List<int> attemptModifier = null)
         {
             Cell nextCellToSolve;
             while (true)
             {
-                PopulateAllCellPossibleValues(grid);
-                nextCellToSolve = FindNextCellToSolve(grid);
+                PopulateAllCellPossibleValues();
+                nextCellToSolve = FindNextCellToSolve();
                 if (nextCellToSolve != null)
                 {
                     if (nextCellToSolve.PossibleValues.Count > 1)
@@ -101,7 +103,6 @@ namespace Sudoku.UI.Models
                     {
                         var cellValue = nextCellToSolve.PossibleValues.FirstOrDefault();
                         nextCellToSolve.Value = cellValue;
-                        //Debug.WriteLine($"SOLVED: Cell in column {nextCellToSolve.Column}, row {nextCellToSolve.Row} is {cellValue}");
                     }
                 }
                 else
@@ -110,7 +111,7 @@ namespace Sudoku.UI.Models
                 }
             };
 
-            return grid;
+            return gridSolution;
         }
 
         private void ProcessCellDecision(Cell cell, List<int> attemptModifier, int attemptNumber, Attempt attempt)
@@ -129,41 +130,41 @@ namespace Sudoku.UI.Models
             Log(attemptNumber, $"GUESS Cell in column {cell.Column}, row {cell.Row} could be {String.Join(", or ", cell.PossibleValues)} so guessed it is {cell.Value}");
         }
 
-        private Cell FindNextCellToSolve(Grid grid)
+        private Cell FindNextCellToSolve()
         {
-            return grid.Cells.FirstOrDefault(c => !c.Value.HasValue && c.PossibleValues != null && c.PossibleValues.Count == 1)
-                ?? grid.Cells.FirstOrDefault(c => !c.Value.HasValue && c.PossibleValues != null && c.PossibleValues.Count == 2);
+            return gridSolution.Cells.FirstOrDefault(c => !c.Value.HasValue && c.PossibleValues != null && c.PossibleValues.Count == 1)
+                ?? gridSolution.Cells.FirstOrDefault(c => !c.Value.HasValue && c.PossibleValues != null && c.PossibleValues.Count == 2);
         }
 
-        private void PopulateAllCellPossibleValues(Grid grid)
+        private void PopulateAllCellPossibleValues()
         {
-            grid.Cells.Where(c => !c.Value.HasValue).ToList()
-                .ForEach(c => c.PossibleValues = GetCellPossibleValues(c, grid));
+            gridSolution.Cells.Where(c => !c.Value.HasValue).ToList()
+                .ForEach(c => c.PossibleValues = GetCellPossibleValues(c));
         }
 
-        private List<int> GetCellPossibleValues(Cell cell, Grid grid)
+        private List<int> GetCellPossibleValues(Cell cell)
         {
-            var relatedCellUniqueValues = GetRelatedSolvedCells(cell, grid)
+            var relatedCellUniqueValues = GetRelatedSolvedCells(cell)
                 .Select(c => c.Value ?? default)
                 .Distinct();
 
             return Enumerable.Range(1, 9).Except(relatedCellUniqueValues).ToList();
         }
 
-        private List<Cell> GetRelatedSolvedCells(Cell cell, Grid grid)
+        private List<Cell> GetRelatedSolvedCells(Cell cell)
         {
             var relatedCells = new List<Cell>();
-            relatedCells.AddRange(grid.Cells.Where(c => c.Row.Equals(cell.Row) && !c.Column.Equals(cell.Column)));
-            relatedCells.AddRange(grid.Cells.Where(c => c.Column.Equals(cell.Column) && !c.Row.Equals(cell.Row)));
-            relatedCells.AddRange(GetBoxRelatedCells(GetCellBox(cell, grid), grid)
+            relatedCells.AddRange(gridSolution.Cells.Where(c => c.Row.Equals(cell.Row) && !c.Column.Equals(cell.Column)));
+            relatedCells.AddRange(gridSolution.Cells.Where(c => c.Column.Equals(cell.Column) && !c.Row.Equals(cell.Row)));
+            relatedCells.AddRange(GetBoxRelatedCells(GetCellBox(cell))
                 .Where(c => !c.Column.Equals(cell.Column) && !c.Row.Equals(cell.Row)));
 
             return relatedCells.Where(c => c.Value.HasValue).ToList();
         }
 
-        private List<Cell> GetBoxRelatedCells(Box box, Grid grid)
+        private List<Cell> GetBoxRelatedCells(Box box)
         {
-            return grid.Cells.Where(c =>
+            return gridSolution.Cells.Where(c =>
                 c.Row >= box.StartRow &&
                 c.Row <= box.EndRow &&
                 c.Column >= box.StartColumn &&
@@ -171,9 +172,9 @@ namespace Sudoku.UI.Models
             ).ToList();
         }
 
-        private Box GetCellBox(Cell cell, Grid grid)
+        private Box GetCellBox(Cell cell)
         {
-            return grid.Boxes.FirstOrDefault(b =>
+            return gridSolution.Boxes.FirstOrDefault(b =>
                 cell.Row >= b.StartRow &&
                 cell.Row <= b.EndRow &&
                 cell.Column >= b.StartColumn &&
