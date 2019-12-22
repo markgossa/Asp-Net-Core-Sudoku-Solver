@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Sudoku.UI.Models;
 using Sudoku.UI.Models.Sudoku;
@@ -11,10 +9,10 @@ namespace Sudoku.UI.Controllers
 {
     public class HomeController : Controller
     {
-        private IGrid _grid;
+        private Grid _grid;
         private ISolver _solver;
 
-        public HomeController(IGrid grid, ISolver solver)
+        public HomeController(Grid grid, ISolver solver)
         {
             _grid = grid;
             _solver = solver;
@@ -28,8 +26,9 @@ namespace Sudoku.UI.Controllers
         public IActionResult Solve(List<Cell> cells)
         {
             _grid.Cells = cells;
-            var solvedGrid = _solver.Solve();
-            return View(solvedGrid.Cells);
+            var solvedGrid = _solver.SolveAsync(_grid);
+
+            return View(solvedGrid.Result.Cells);
         }
 
         public IActionResult About()
