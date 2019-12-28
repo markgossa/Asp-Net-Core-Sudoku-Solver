@@ -1,9 +1,9 @@
-﻿using Sudoku.UI.Services;
+﻿using Sudoku.UI.Tests.Services;
 using System.Collections.Generic;
 
-namespace Sudoku.UI.Models.Sudoku.Puzzles
+namespace Sudoku.UI.Tests.Models.Puzzles
 {
-    public class SamplePuzzleHard2 : IPuzzle
+    public class HardPuzzle2 : IPuzzle
     {
         public List<int?> GetPuzzle()
         {

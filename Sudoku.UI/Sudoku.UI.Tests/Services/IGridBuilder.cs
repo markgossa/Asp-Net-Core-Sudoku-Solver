@@ -1,6 +1,6 @@
 ﻿using Sudoku.UI.Models.Sudoku;
 
-namespace Sudoku.UI.Services
+namespace Sudoku.UI.Tests.Services
 {
     public interface IGridBuilder
     {

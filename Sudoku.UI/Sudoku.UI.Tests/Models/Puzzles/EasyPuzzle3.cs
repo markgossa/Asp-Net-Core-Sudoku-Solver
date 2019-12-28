@@ -1,12 +1,12 @@
-﻿using Sudoku.UI.Services;
+﻿using Sudoku.UI.Tests.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Sudoku.UI.Models.Sudoku.Puzzles
+namespace Sudoku.UI.Tests.Models.Puzzles
 {
-    public class SamplePuzzleEasy3 : IPuzzle
+    public class EasyPuzzle3 : IPuzzle
     {
         public List<int?> GetPuzzle()
         {

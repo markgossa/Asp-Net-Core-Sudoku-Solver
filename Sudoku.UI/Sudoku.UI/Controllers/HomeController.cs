@@ -12,9 +12,9 @@ namespace Sudoku.UI.Controllers
         private Grid _grid;
         private ISolver _solver;
 
-        public HomeController(Grid grid, ISolver solver)
+        public HomeController(ISolver solver)
         {
-            _grid = grid;
+            _grid = new Grid();
             _solver = solver;
         }
 

@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sudoku.UI.Models;
 using Sudoku.UI.Models.Sudoku;
-using Sudoku.UI.Models.Sudoku.Puzzles;
 using Sudoku.UI.Services;
 
 namespace Sudoku.UI
@@ -31,10 +29,6 @@ namespace Sudoku.UI
             });
 
             services.AddControllersWithViews();
-
-            services.AddScoped<IPuzzle, SamplePuzzleHard>();
-            services.AddScoped<IGridBuilder, GridBuilder>();
-            services.AddScoped<Grid>(sp => sp.GetService<IGridBuilder>().GetSudokuGrid());
             services.AddScoped<ISolver, EliminationSolver>();
         }
 

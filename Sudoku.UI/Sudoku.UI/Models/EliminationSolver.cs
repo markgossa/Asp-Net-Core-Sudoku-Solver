@@ -30,7 +30,7 @@ namespace Sudoku.UI.Models
             return new Grid();
         }
 
-        public async IAsyncEnumerable<bool> RunAttemptsAsync()
+        private async IAsyncEnumerable<bool> RunAttemptsAsync()
         {
             for (attemptNumber = 0; attemptNumber < Math.Pow(2, _maxDecisionCount); attemptNumber++)
             {
