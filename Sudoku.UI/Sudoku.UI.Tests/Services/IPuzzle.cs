@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Sudoku.UI.Services
+namespace Sudoku.UI.Tests.Services
 {
     public interface IPuzzle
     {

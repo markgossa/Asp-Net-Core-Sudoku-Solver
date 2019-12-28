@@ -1,11 +1,8 @@
-﻿using Sudoku.UI.Models;
-using Sudoku.UI.Services;
-using System;
-using System.Collections.Generic;
+﻿using Sudoku.UI.Models.Sudoku;
+using Sudoku.UI.Tests.Services;
 using System.Linq;
-using System.Threading.Tasks;
 
-namespace Sudoku.UI.Models.Sudoku
+namespace Sudoku.UI.Tests.Models
 {
     public class GridBuilder : IGridBuilder
     {
